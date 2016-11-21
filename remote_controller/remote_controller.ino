@@ -16,9 +16,12 @@
 #define LED5 8
 
 
-int thro = 0, yaw = 0, pitch = 0, roll = 0, mode = 0, aux = 0;
+int thr = 0, yaw = 0, pit = 0, rol = 0, mod = 0, aux = 0;
 int sw_l_status = 1, sw_r_status = 1;
 int current_mode = 1;
+//char json[] = "{\"thr\":0000,\"yaw\":0000,\"pit\":0000,}"
+StaticJsonBuffer<200> jsonBuffer;
+JsonObject& json = jsonBuffer.createObject();
 
 void turn_off_leds(){
   digitalWrite(LED1,LOW);
@@ -122,27 +125,41 @@ void setup() {
   Serial.begin(57600);
 }
 
-StaticJsonBuffer<200> jsonBuffer;
-
 void loop() {
-  thro = analogRead(THROTTLE) + 1000;
+  /*
+  Norlmally RC controllers returns values between 1000 and 2000, that explains
+  why we are using +1000 to the next variables, because potentiometers returns values
+  between 0 and 1000.
+  */
+  thr = analogRead(THROTTLE) + 1000;
   yaw = analogRead(YAW) + 1000;
-  pitch = analogRead(PITCH) + 1000;
-  roll = analogRead(ROLL) + 1000;
+  pit = analogRead(PITCH) + 1000;
+  rol = analogRead(ROLL) + 1000;
 
-  Serial.print(String(thro) + "-");
+  /*
+  Serial.print(String(thr) + "-");
   Serial.print(String(yaw) + "-");
-  Serial.print(String(pitch) + "-");
-  Serial.print(String(roll) + "-");
-  Serial.print(String(mode) + "-");
+  Serial.print(String(pit) + "-");
+  Serial.print(String(rol) + "-");
+  Serial.print(String(mod) + "-");
   Serial.println(aux);
+  */
+  
+  json["thr"]=thr;
+  json["yaw"]=yaw;
+  json["pit"]=pit;
+  json["rol"]=rol;
+  json["mod"]=mod;
+  json["aux"]=aux;
+  
+  json.printTo(Serial);
   
   sw_l_status = digitalRead(SW_L);
   sw_r_status = digitalRead(SW_R);
   
   if(sw_l_status == 0 || sw_r_status == 0){
     switch_mode();
-    delay(200);      //cause humans are slow pressing buttons :)
+    delay(200);      //cause we (human beens) are slow pressing buttons :)
   }
   
   delay(REF_RATE);
