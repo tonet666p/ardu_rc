@@ -1,25 +1,30 @@
 #include <ArduinoJson.h>
 
+// Constants for adapt to other arduino boards
+// Analog Inputs
 #define THROTTLE A0
 #define YAW A1
 #define PITCH A2
 #define ROLL A3
 #define MODE A4
 #define AUX A5
-#define REF_RATE 100      //milliseconds
+// Digital Inputs
 #define SW_L 2
 #define SW_R 3
+// Digital Outputs
 #define LED1 4 
 #define LED2 5
 #define LED3 6
 #define LED4 7
 #define LED5 8
+// End of Constants
+#define REF_RATE 100      //Refresh rate in milliseconds
 
 
-int thr = 0, yaw = 0, pit = 0, rol = 0, mod = 0, aux = 0;
+int thr = 0, yaw = 0, pit = 0, rol = 0, mod = 0, aux = 1500;
 int sw_l_status = 1, sw_r_status = 1;
 int current_mode = 1;
-//char json[] = "{\"thr\":0000,\"yaw\":0000,\"pit\":0000,}"
+
 StaticJsonBuffer<200> jsonBuffer;
 JsonObject& json = jsonBuffer.createObject();
 
@@ -86,27 +91,27 @@ void set_mode(int m){
     case 1:
       turn_on_led(LED1);
       current_mode = 1;
-      mode = 1000;      // 0 - 1230
+      mod = 1000;      // 0 - 1230
       break;
     case 2:
       turn_on_led(LED2);
       current_mode = 2;
-      mode = 1290;      // 1231 - 1360
+      mod = 1290;      // 1231 - 1360
       break;
     case 3:
       turn_on_led(LED3);
       current_mode = 3;
-      mode = 1410;      // 1361 - 1490
+      mod = 1410;      // 1361 - 1490
       break;
     case 4:
       turn_on_led(LED4);
       current_mode = 4;
-      mode = 1560;      // 1491 - 1620
+      mod = 1560;      // 1491 - 1620
       break;
     case 5:
       turn_on_led(LED5);
       current_mode = 5;
-      mode = 1690;      // 1621 - 1749
+      mod = 1690;      // 1621 - 1749
       break;
     default:
       break;
@@ -135,15 +140,6 @@ void loop() {
   yaw = analogRead(YAW) + 1000;
   pit = analogRead(PITCH) + 1000;
   rol = analogRead(ROLL) + 1000;
-
-  /*
-  Serial.print(String(thr) + "-");
-  Serial.print(String(yaw) + "-");
-  Serial.print(String(pit) + "-");
-  Serial.print(String(rol) + "-");
-  Serial.print(String(mod) + "-");
-  Serial.println(aux);
-  */
   
   json["thr"]=thr;
   json["yaw"]=yaw;
@@ -152,14 +148,17 @@ void loop() {
   json["mod"]=mod;
   json["aux"]=aux;
   
+  // Send JSON data using a RF module like HC-06, HC-05, HC-12, etc
+  // Example: {"thr":1510,"yaw":1504,"pit":1502,"rol":1516,"mod":1000,"aux":1500}
   json.printTo(Serial);
+  Serial.println();
   
   sw_l_status = digitalRead(SW_L);
   sw_r_status = digitalRead(SW_R);
   
   if(sw_l_status == 0 || sw_r_status == 0){
     switch_mode();
-    delay(200);      //cause we (human beens) are slow pressing buttons :)
+    delay(100);      //cause we (human beens) are slow pressing buttons :)
   }
   
   delay(REF_RATE);
