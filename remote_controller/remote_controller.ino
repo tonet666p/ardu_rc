@@ -24,6 +24,7 @@
 int thr = 0, yaw = 0, pit = 0, rol = 0, mod = 0, aux = 1500;
 int sw_l_status = 1, sw_r_status = 1;
 int current_mode = 1;
+String data = "";
 
 StaticJsonBuffer<200> jsonBuffer;
 JsonObject& json = jsonBuffer.createObject();
@@ -141,17 +142,20 @@ void loop() {
   pit = analogRead(PITCH) + 1000;
   rol = analogRead(ROLL) + 1000;
   
-  json["thr"]=thr;
-  json["yaw"]=yaw;
-  json["pit"]=pit;
-  json["rol"]=rol;
-  json["mod"]=mod;
-  json["aux"]=aux;
+  data = "{"+String(thr)+","+String(yaw)+","+String(pit)+","+String(rol)+","+String(mod)+","+String(aux)+"}";
+  
+  //json["thr"]=thr;
+  //json["yaw"]=yaw;
+  //json["pit"]=pit;
+  //json["rol"]=rol;
+  //json["mod"]=mod;
+  //json["aux"]=aux;
   
   // Send JSON data using a RF module like HC-06, HC-05, HC-12, etc
   // Example: {"thr":1510,"yaw":1504,"pit":1502,"rol":1516,"mod":1000,"aux":1500}
-  json.printTo(Serial);
-  Serial.println();
+  //json.printTo(Serial);
+  Serial.println(data);
+  Serial.println(data.length());
   
   sw_l_status = digitalRead(SW_L);
   sw_r_status = digitalRead(SW_R);
