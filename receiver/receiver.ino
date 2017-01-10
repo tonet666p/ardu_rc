@@ -1,29 +1,28 @@
-#define LED1 4 
-#define LED2 5
-#define LED3 6
-#define LED4 7
-#define LED5 8
+//PWM Pins
+#define THR 3
+#define YAW 5
+#define PIT 6
+#define ROL 9
+#define MOD 10
+#define AUX 11
 
-#define THR A0
-#define YAW A1
-#define PIT A2
-#define ROL A3
-#define MOD A4
-#define AUX A5
+//For software serial
+#define RX_PIN A2
+#define TX_PIN A3
 
+#include <SoftwareSerial.h>
+
+SoftwareSerial rfSerial(RX_PIN , TX_PIN);
 
 String data = "";
-
-int chan[]={0,0,0,0,0,0};
+char character;
+int chan[] = {0,0,0,0,0,0};
+int signal = 0;
 
 void setup()  
 {
-  Serial.begin(57600);
-  pinMode(LED1,OUTPUT);
-  pinMode(LED2,OUTPUT);
-  pinMode(LED3,OUTPUT);
-  pinMode(LED4,OUTPUT);
-  pinMode(LED5,OUTPUT);
+  rfSerial.begin(57600);
+  Serial.begin(9600);
   
   pinMode(THR,OUTPUT);
   pinMode(YAW,OUTPUT);
@@ -33,58 +32,68 @@ void setup()
   pinMode(AUX,OUTPUT);
 }
 
-void turn_off_leds(){
-  digitalWrite(LED1,LOW);
-  digitalWrite(LED2,LOW);
-  digitalWrite(LED3,LOW);
-  digitalWrite(LED4,LOW);
-  digitalWrite(LED5,LOW);
-}
-
-void loop()
-{
-  while(Serial.available()==0)
-  {}
-
-  char character;
-  while(Serial.available()>0){
-    character = Serial.read();
-    //Serial.write(character);
-  }
-
-  if (character == '\n') {
-    if (data.length() == 31) {
-      if ( data[0] == '{' && data[30]=='}' ){
-        
-        for (int n = 0; n<6; n++){
-          chan[n]=data.substring((4*n)+(n+1),(4*n)+(n+5)).toInt();
+void loop(){
+  while(rfSerial.available()>0){
+    character = rfSerial.read();
+    if (character == ' ') {
+      if (data.length() == 31) {
+        if ( data[0] == '{' && data[30]=='}' ){
+          ////////Serial.println(data);
+          for (int n = 0; n<6; n++){
+            chan[n]=data.substring((4*n)+(n+1),(4*n)+(n+5)).toInt();
+          }
+          Serial.print("(");
+          analogWrite(THR,(chan[0]-1000)/4);
+          Serial.print((chan[0]-1000)/4);
+          Serial.print(",");
+          analogWrite(YAW,(chan[1]-1000)/4);
+          Serial.print((chan[1]-1000)/4);
+          Serial.print(",");
+          analogWrite(PIT,(chan[2]-1000)/4);
+          Serial.print((chan[2]-1000)/4);
+          Serial.print(",");
+          analogWrite(ROL,(chan[3]-1000)/4);
+          Serial.print((chan[3]-1000)/4);
+          Serial.print(",");
+          analogWrite(MOD,(chan[4]-1000)/4);
+          Serial.print((chan[4]-1000)/4);
+          Serial.print(",");
+          analogWrite(AUX,(chan[5]-1000)/4);
+          Serial.print((chan[5]-1000)/4);
+          Serial.println(")");
+          
+          signal = 100;
         }
-        digitalWrite(THR,(chan[0]-1000)/4);
-        digitalWrite(YAW,(chan[1]-1000)/4);
-        digitalWrite(PIT,(chan[2]-1000)/4);
-        digitalWrite(ROL,(chan[3]-1000)/4);
-        digitalWrite(MOD,(chan[4]-1000)/4);
-        digitalWrite(AUX,(chan[5]-1000)/4);
-        /*
-        Serial.print("(");
-        Serial.print(chan[0]);
-        Serial.print(",");
-        Serial.print(chan[1]);
-        Serial.print(",");
-        Serial.print(chan[2]);
-        Serial.print(",");
-        Serial.print(chan[3]);
-        Serial.print(",");
-        Serial.print(chan[4]);
-        Serial.print(",");
-        Serial.print(chan[5]);
-        Serial.println(")");
-        */
-        
       }
+      data = "";
+    }else{
+      data = data + character;
     }
-    data = "";
-  }else{
-    data = data + character;
   }
+  if(rfSerial.available()<1){
+    Serial.println(signal);
+    if(signal < 5){
+      Serial.print("(");
+      analogWrite(THR,0);
+      Serial.print(0);
+      Serial.print(",");
+      analogWrite(YAW,0);
+      Serial.print(0);
+      Serial.print(",");
+      analogWrite(PIT,0);
+      Serial.print(0);
+      Serial.print(",");
+      analogWrite(ROL,0);
+      Serial.print(0);
+      Serial.print(",");
+      analogWrite(MOD,0);
+      Serial.print(0);
+      Serial.print(",");
+      analogWrite(AUX,0);
+      Serial.print(0);
+      Serial.println(")");
+    }
+    signal -= 1;
+  }
+  
 }
